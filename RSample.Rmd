@@ -1,0 +1,38 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+require(xgboost)
+
+# xgboost comes with a built in dataset
+# it's about classifying mushrooms based on 22 attributes
+# more info: https://archive.ics.uci.edu/ml/datasets/Mushroom
+
+data(agaricus.train, package='xgboost')
+data(agaricus.test, package='xgboost')
+train <- agaricus.train
+test <- agaricus.test
+
+dtrain <- xgb.DMatrix(data = train$data, label=train$label)
+dtest <- xgb.DMatrix(data = test$data, label=test$label)
+
+watchlist <- list(train=dtrain, test=dtest)
+```
+
+```{r}
+# train the model
+bst <- xgb.train(data=dtrain, max.depth=2, eta=1, nthread = 2, nrounds=2, watchlist=watchlist, objective = "binary:logistic")
+```
+
+```{r}
+# predict on the test data 
+
+pred <- predict(bst, test$data)
+
+label = getinfo(dtest, "label")
+err <- as.numeric(sum(as.integer(pred > 0.5) != label))/length(label)
+print(paste("test-error=", err))
+```
